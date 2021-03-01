@@ -132,7 +132,6 @@ class Stan:
 
     def update(self):
         self.x -= 10
-        # print(self.rect.left)
         if self.x <= 1410:
             self.count += 1
             self.animation = False
@@ -173,18 +172,21 @@ class Stan:
         self.length = len(phrases)
         self.phrases = phrases
         if self.animation:
+            fones.surface_shaht.blit(self.stan_image, (self.x, self.y))
             if self.stan_animation == 1:
                 stan.update()
             elif self.stan_animation == 2:
                 stan.update_out()
-        fones.surface_shaht.blit(self.stan_image, (self.x, self.y))
-        stan.text()
+        else:
+            fones.surface_shaht.blit(self.stan_image, (self.x, self.y))
+            stan.text()
 
     def check(self):
-        if self.count < self.length - 1:
+        if self.count < self.length - 1 and not self.animation:
             self.count += 1
             print('count', self.count)
         else:
+            self.play = True
             self.animation = True
             self.count = -1
             self.stan_animation = 2
@@ -272,7 +274,8 @@ class Taskbar:
         self.kg_of_copper = iron.klass_kg
         self.kg_of_iron_max = 7
         self.kg_of_order_max = [20, 12]
-        self.task_of_game = ['Добыть уголь 1', 'Добыть медь 2', 'Добыть железо 3', 'Заказ 4', 'Заказ 4']
+        self.kg_of_tonncoal_max = 1000
+        self.task_of_game = ['Добыть уголь 1', 'Добыть медь 2', 'Добыть железо 3', 'Заказ 4', 'Заказ 5']
         self.task_statement = True
         self.task_num = 0
         self.opening = False
@@ -312,7 +315,13 @@ class Taskbar:
         print('copper')
         self.show_task_name(f'Добыть {self.kg_of_order_max[0]} кг меди, {self.kg_of_order_max[1]} кг железа.')
         self.show_task_progress(f'{self.kg_of_copper} кг / {self.kg_of_order_max[0]} кг  {self.kg_of_iron} кг / {self.kg_of_order_max[1]} кг')
-        self.show_task_reward('1620 монет')
+        self.show_task_reward('4200 монет')
+
+    def get_tonn_coal(self):
+        print('copper')
+        self.show_task_name(f'Добыть {round(self.kg_of_tonncoal_max / 1000, 3)} т угля.')
+        self.show_task_progress(f'{round(self.kg_of_tonncoal_max / 1000, 3)} т / 1 т')
+        self.show_task_reward('8600 монет')
 
     def show_task_name(self, name):
         text = f2.render(name, True, (0, 0, 0))
@@ -346,7 +355,7 @@ class Taskbar:
                     self.task_change()
                     coal.klass_kg -= 6
                     coal.klass_kg = round(coal.klass_kg, 3)
-                    inventory.money += 250
+                    inventory.money += 350
                     inventory.score += 100
                     self.act = False
         print(self.task_of_game[self.task_num] == 'Добыть медь 2', not self.task_statement, '------------')
@@ -384,7 +393,18 @@ class Taskbar:
                     iron.klass_kg -= 12
                     iron.klass_kg = round(iron.klass_kg, 3)
                     inventory.money += 4200
-                    inventory.score += 4000
+                    inventory.score += 1500
+                    self.task_change()
+                    self.act = False
+        if self.task_of_game[self.task_num] == 'Заказ 5' and not self.task_statement:
+            print(self.task_of_game[self.task_num])
+            self.get_tonn_coal()
+            if taskbar_klass.kg_of_tonncoal_max >= taskbar_klass.kg_of_coal:
+                if self.act:
+                    coal.klass_kg -= 12
+                    copper.klass_kg = round(copper.klass_kg, 3)
+                    inventory.money += 4200
+                    inventory.score += 3000
                     self.task_change()
                     self.act = False
 
@@ -413,7 +433,7 @@ class Ore:
         self.y = -260
         self.coal = False
         self.opening = False
-        self.surface_ore = pygame.Surface((1000, 200), pygame.SRCALPHA, 32)
+        self.surface_ore = pygame.Surface((1000, 400), pygame.SRCALPHA, 32)
         self.surface_ore = self.surface_ore.convert_alpha()
         self.coalbar = pygame.image.load('textures/coalbar.png').convert_alpha()
         self.coalbar = pygame.transform.scale(self.coalbar, (200, 200))
@@ -424,6 +444,8 @@ class Ore:
         self.ironbar = pygame.image.load('textures/ironscore.png').convert_alpha()
         self.ironbar = pygame.transform.scale(self.ironbar, (200, 200))
         self.iron = False
+        self.export = pygame.image.load('textures/export.png').convert_alpha()
+        self.export = pygame.transform.scale(self.export, (100, 100))
 
     def action(self):
         if self.opening:
@@ -433,8 +455,10 @@ class Ore:
 
         if self.coal:
             self.surface_ore.blit(self.coalbar, (0, 0))
+            self.surface_ore.blit(self.export, (200, 200))
             ore_klass.show_ore(taskbar_klass.kg_of_coal)
             fones.surface_shaht.blit(self.surface_ore, (600, self.y))
+
         if self.copper:
             self.surface_ore.blit(self.copperbar, (200, 0))
             ore_klass.show_ore(taskbar_klass.kg_of_copper, 200)
@@ -718,9 +742,9 @@ class Fone:
             sc.blit(self.shaht_icon, (self.position_shaht_icon))
 
 stan = Stan()
-coal = Ore_mine(pygame.image.load('textures/coal.png').convert_alpha(), 3, (700, 400), 0.125, 1)
-copper = Ore_mine(pygame.image.load('textures/copper.png').convert_alpha(), 10, (1000, 400), 0.095, 3)
-iron = Ore_mine(pygame.image.load('textures/iron.png').convert_alpha(), 18, (1300, 400), 0.215, 5)
+coal = Ore_mine(pygame.image.load('textures/coal.png').convert_alpha(), 1, (700, 400), 0.125, 1)
+copper = Ore_mine(pygame.image.load('textures/copper.png').convert_alpha(), 1, (1000, 400), 0.095, 3)
+iron = Ore_mine(pygame.image.load('textures/iron.png').convert_alpha(), 1, (1300, 400), 0.215, 5)
 taskbar_klass = Taskbar()
 action_klass = Action()
 ore_klass = Ore()
@@ -736,7 +760,7 @@ phrases1 = ["Приветствую тебя в шахтерском деле! �
                         "Вот и отлично! Уголь - порода обыденная, но незаменимая в плане топлива.",
                         "Хватай деревянную кирку и за работу!"]
 
-phrases2 = ["Хо-хо! А ты быстро справился, мой юный друг. Вот твои 250 монет.",
+phrases2 = ["Хо-хо! А ты быстро справился, мой юный друг. Вот твои 350 монет.",
             "Понимаю, не за этой кучкой денег ты сюда шел, но не всё сразу :)",
             "Теперь добудь-ка мне 4 кг меди. Эта порода твердая, деревянной киркой её не добыть!",
             "Покопай ещё угля и продай его оптом. Прикупи себе каменную кирку и вперёд!",
@@ -754,7 +778,7 @@ phrases4 = ["Вижу ты подустал... Но не зря, все же 162
 phrases5 = ["Супер! Покупатель доволен. Да и я доволен, ты молодец!",
             "Даже чаевые оставил - 500 монет надбавкой. Но тут ещё один предприниматель нарисовался",
             "Ты только не падай, но для его завода требуется тонна угля! Да-да, 1000 кг!",
-            "Зато сумма будет такой, о которой ты и не мечтал - 12000 монет",
+            "Зато сумма будет такой, о которой ты и не мечтал - 8600 монет",
             "Это последнее поручение. Считай, выполнишь этот заказ и ты автоматом квалифицируешься с новичка в бывалого",
             "После этого я тебя отправлю в другую шахту для добычи серебра и золота...Хе-хе, за работу, старина!"]
 
@@ -843,13 +867,13 @@ while True:
             if menu_klass.menu_off:
                 '''ЧЕК СТЭН'''
                 if event.type == pygame.MOUSEBUTTONUP:
-                    if taskbar_klass.task_statement:
+                    if taskbar_klass.task_statement and not stan.animation:
                         stan.check()
                         continue
                     else:
                         fones.check(event.pos)
                 '''ЧЕК руда'''
-                if event.type == pygame.MOUSEBUTTONUP:
+                if event.type == pygame.MOUSEBUTTONUP and not stan.play:
                     if (event.button == 1 or event.key == pygame.K_SPACE):
                         ore_klass.check(event.pos)
                         if inventory.kirka:
