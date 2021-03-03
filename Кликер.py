@@ -99,12 +99,11 @@ class Inventory:
             self.opening = False
         elif 275 <= pos[0] <= 335 and 10 <= pos[1] <= 35:
             self.opening = True
-        if 120 <= pos[1] <= 170 and 1735 <= pos[0] <= 1790 and self.opening and taskbar_klass.buy_ready:
+        if 120 <= pos[1] <= 170 and 1735 <= pos[0] <= 1790 and self.opening and taskbar_klass.buy_ready and self.skin != 3:
             if self.kirkabars_sum[self.skin] <= self.money:
                 self.money -= self.kirkabars_sum[self.skin]
                 self.buying.play()
-                if self.skin != 3:
-                    self.skin += 1
+                self.skin += 1
 
     def open(self):
         if self.y != 0:
@@ -125,9 +124,14 @@ class Inventory:
         drawText(self.surface_kirka, str(self.score), (0, 0, 0), drawTextRect, f3, True)
 
     def show_skin_sum(self):
-        text = str(self.kirkabars_sum[self.skin])
-        text = f3.render(text, True, (0, 0, 0))
-        self.surface_kirka.blit(text, (160, 140))
+        if self.skin == 3:
+            text = 'Куплено'
+            text = f3.render(text, True, (0, 0, 0))
+            self.surface_kirka.blit(text, (150, 140))
+        else:
+            text = str(self.kirkabars_sum[self.skin])
+            text = f3.render(text, True, (0, 0, 0))
+            self.surface_kirka.blit(text, (160, 140))
 
 
 class Stan:
@@ -324,7 +328,7 @@ class Taskbar:
 
     def get_tonn_coal(self):
         self.show_task_name(f'Добыть {round(self.kg_of_tonncoal_max / 1000, 3)} т угля.')
-        self.show_task_progress(f'{round(self.kg_of_tonncoal_max / 1000, 3)} т / 1 т')
+        self.show_task_progress(f'{round(self.kg_of_coal / 1000, 3)} т / 1 т')
         self.show_task_reward('12600 монет')
 
     def show_task_name(self, name):
@@ -392,17 +396,18 @@ class Taskbar:
                     copper.klass_kg = round(copper.klass_kg, 3)
                     iron.klass_kg -= 12
                     iron.klass_kg = round(iron.klass_kg, 3)
-                    inventory.money += 4200
+                    inventory.money += 4700
                     inventory.score += 1500
                     self.task_change()
                     self.act = False
         if self.task_of_game[self.task_num] == 'Заказ 5' and not self.task_statement:
             self.get_tonn_coal()
-            if taskbar_klass.kg_of_tonncoal_max >= taskbar_klass.kg_of_coal:
+            if taskbar_klass.kg_of_coal >= taskbar_klass.kg_of_tonncoal_max:
                 if self.act:
                     coal.klass_kg -= 1000
                     copper.klass_kg = round(copper.klass_kg, 3)
                     inventory.money += 12600
+                    inventory.score += 5000
                     self.task_change()
                     self.act = False
 
@@ -523,14 +528,15 @@ class Menu:
         else:
             return
 
-    def check_headmenu(self, pos):
+    def check_save(self, pos):
         if 675 <= pos[0] <= 1305 and 488 <= pos[1] <= 598:
             self.opening = False
         else:
             return
 
-    def check_save(self, pos):
+    def check_headmenu(self, pos):
         if 675 <= pos[0] <= 1305 and 642 <= pos[1] <= 752:
+            fones.check_headmenu((50, 900))
             self.opening = False
         else:
             return
@@ -608,7 +614,7 @@ class Fone:
     def __init__(self):
         self.shaht_sound = pygame.mixer.Sound("sounds/music.mp3")
         self.mainmenu_sound = pygame.mixer.Sound("sounds/mainmenu.mp3")
-        self.mainmenu_sound.play()
+        self.mainmenu_sound.play(loops=-1)
         self.chain = pygame.mixer.Sound("sounds/chain.mp3")
         self.y = 4320
         self.y2 = 0
@@ -673,7 +679,7 @@ class Fone:
             if self.y2 == -4269:
                 self.mainmenu_sound.set_volume(1)
                 self.shaht_sound.set_volume(0.5)
-                self.mainmenu_sound.play()
+                self.mainmenu_sound.play(loops=-1)
             if self.y2 == -1000:
                 self.shaht_sound.set_volume(0.2)
             if self.y_delta >= 8:
@@ -702,7 +708,7 @@ class Fone:
             self.surface_shaht.blit(self.bg, (0, 0))
         if self.change:
             if self.y2 == -50:
-                self.shaht_sound.play()
+                self.shaht_sound.play(loops=-1)
                 self.shaht_sound.set_volume(1)
                 self.mainmenu_sound.set_volume(0.5)
             if self.y2 <= -3287:
@@ -752,9 +758,9 @@ class Fone:
             sc.blit(self.shaht_icon, (self.position_shaht_icon))
 
 stan = Stan()
-coal = Ore_mine(pygame.image.load('textures/coal.png').convert_alpha(), 3, (700, 400), 0.125, 1)
-copper = Ore_mine(pygame.image.load('textures/copper.png').convert_alpha(), 5, (1000, 400), 0.095, 3)
-iron = Ore_mine(pygame.image.load('textures/iron.png').convert_alpha(), 10, (1300, 400), 0.215, 5)
+coal = Ore_mine(pygame.image.load('textures/coal.png').convert_alpha(), 1, (700, 400), 0.125, 1)
+copper = Ore_mine(pygame.image.load('textures/copper.png').convert_alpha(), 2, (1000, 400), 0.095, 3)
+iron = Ore_mine(pygame.image.load('textures/iron.png').convert_alpha(), 3, (1300, 400), 0.215, 5)
 taskbar_klass = Taskbar()
 action_klass = Action()
 ore_klass = Ore()
@@ -771,18 +777,18 @@ phrases1 = ["Приветствую тебя в шахтерском деле! �
             "Хватай деревянную кирку и за работу!"]
 
 phrases2 = ["Хо-хо! А ты быстро справился, мой юный друг. Как ты уже догадался в руде всегда случайное количество полезного ископаемого.",
-            "Вот твои 350 'далларов' - именно так еще древние шахтеры называли свои денежные сбережения. К слову, 100 далларов = 2,78 доллара = 206 рублей",
+            'Вот твои 350 "далларов" - именно так еще древние шахтеры называли свои денежные сбережения. К слову, 100 далларов = 2,78 доллара = 205.4 рублей',
             "Понимаю, не за этой кучкой денег ты сюда шел, но не всё сразу :)",
-            "Теперь добудь-ка мне 4 кг меди. Эта порода твердая, ломается только после 10 ударов кирки!",
-            "Покопай ещё угля и продай его оптом. Затем можешь купить скин на кирку и добыча руды станет ещё приятней!",
-            "(Продать ресурсы - нажать на оранжевый квадрат с далларам. Купить скин - нажать на надпись скин)"
+            "Теперь добудь-ка мне 4 кг меди. Эта порода твердая, ломается только после 2 ударов кирки!",
+            "Советую покопать ещё угля и продать его оптом. Затем можешь купить скин на кирку и добыча руды станет ещё приятней!",
+            '(Продать ресурсы - нажать на оранжевый квадрат с далларом. Купить скин - нажать на надпись "скин")'
             ]
 
 phrases3 = ["А ты не плох! Поздравляю, держи честно заработанные 720 далларов",
-            "Железо тверже меди. Однако с новой киркой добыть железо не составит проблем",
+            "Железо тверже меди. Зато содержит больше полезного ископаемого и стоит оптом дороже!",
             "Как добудешь 7 кг, возвращайся за зарплатой"]
 
-phrases4 = ["Вижу ты подустал... Но не зря, все же 1620 далларов заработал",
+phrases4 = ["Вижу ты подустал...(Можешь нажать Escape и отдохнуть) Но не зря, все же 1620 далларов заработал",
             "Тут от одного молодого человека заказ поступил. Он с комбината по производству электроники",
             "Необходимо 20 кг меди и 12 железа. Обещал за все про все аж 4200 далларов",
             "На кону большая сумма, не оплошай :)"]
@@ -794,9 +800,11 @@ phrases5 = ["Супер! Покупатель доволен. Да и я дов�
             "Это последнее поручение. Считай, выполнишь этот заказ и ты автоматом квалифицируешься с новичка в бывалого",
             "После этого я тебя отправлю в другую шахту для добычи серебра и золота...Хе-хе, за работу, старина!"]
 
-phrases6 = ["Конец игры",
-            "Игру создал Лаптев Арсений"
-            ]
+phrases6 = ["Раз ты дошел до сюда, то знай: ТЫ КРАСАВЧИК! РЕСПЕКТ И УВАЖУХА!",
+            'Теперь ты удостоен звания бывалого и можешь покинуть шахту "Угольные раскопки" переходя в "Золотую жилу"',
+            "Она тебя ждет в следующей части игры, которая выйдет когда создатель соберет донатом 5000 рублей.",
+            "Кидайте ему на сбер или на киви. Однако игра не заканчивается, и ты можешь бесконечно копать и грести бабосики)",
+            'А на этом все! Пока! Игру создал Арсений Лаптев (2021 год) под псевдонимом "Blacksun". Увидмся в 2 части!']
 
 phrase_collection = [phrases1, phrases2, phrases3, phrases4, phrases5, phrases6]
 
@@ -822,7 +830,6 @@ class Helper:
         elif self.coal_help:
             fones.surface_shaht.blit(self.hand, (self.x, 520))
         if taskbar_klass.buy_ready and taskbar_klass.task_num == 1 and self.buy_help:
-            print('хаай')
             fones.surface_shaht.blit(self.hand, (726, 192))
 
 
